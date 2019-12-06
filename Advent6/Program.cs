@@ -48,20 +48,12 @@ namespace Advent6
             var result = new Dictionary<string, Thing>();
             using (var reader = new StreamReader("input.txt", true))
             {
-                string line = await reader.ReadLineAsync();
+                var line = await reader.ReadLineAsync();
                 while (line != null)
                 {
                     var parts = line.Split(")");
-                    if (!result.TryGetValue(parts[0], out var p))
-                    {
-                        p = new Thing { Name = parts[0] };
-                        result.Add(p.Name, p);
-                    }
-                    if (!result.TryGetValue(parts[1], out var c))
-                    {
-                        c = new Thing { Name = parts[1] };
-                        result.Add(c.Name, c);
-                    }
+                    Thing p = GetOrCreate(result, parts[0]);
+                    Thing c = GetOrCreate(result, parts[1]);
                     c.Orbits = p;
 
                     line = await reader.ReadLineAsync();
@@ -70,11 +62,21 @@ namespace Advent6
             }
         }
 
+        private static Thing GetOrCreate(Dictionary<string, Thing> result, string part)
+        {
+            if (!result.TryGetValue(part, out var p))
+            {
+                p = new Thing { Name = part };
+                result.Add(p.Name, p);
+            }
+
+            return p;
+        }
+
         class Thing
         {
             public string Name { get; set; }
             public Thing Orbits { get; set; }
         }
-
     }
 }
