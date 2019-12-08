@@ -49,7 +49,7 @@ namespace Advent7
                 {
                     var processor = processors[i];
                     var nextProcessor = processors[(i + 1) % 5];
-                    processor.OutputProduced += (s, e) => nextProcessor.InputQueue.Enqueue(e.Output);
+                    processor.OutputProduced += (s, e) => nextProcessor.AddInput(e.Output);
                     processor.InputQueue.Enqueue(combination[i]);
                 }
                 processors[0].InputQueue.Enqueue(0);

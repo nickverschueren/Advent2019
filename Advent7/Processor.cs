@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Advent7
@@ -26,9 +27,11 @@ namespace Advent7
         }
 
         public ConcurrentQueue<int> InputQueue { get; } = new ConcurrentQueue<int>();
+
         public ConcurrentQueue<int> OutputQueue { get; } = new ConcurrentQueue<int>();
 
         public event EventHandler<OutputProducedEventArgs> OutputProduced;
+        private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(0, 1);
 
         public int[] WorkingSet { get; set; }
 
@@ -76,6 +79,12 @@ namespace Advent7
             } while (true);
         }
 
+        public void AddInput(int value)
+        {
+            InputQueue.Enqueue(value);
+            _semaphoreSlim.Release();
+        }
+
         private int ExecuteGoto(int[] workingSet, int position, int input, bool compareTo)
         {
             var x = GetParameter(workingSet, position + 1, GetParameterMode(input, 0));
@@ -96,7 +105,10 @@ namespace Advent7
         private async Task<int> ExecuteInput(int[] workingSet, int position)
         {
             int value;
-            while (!InputQueue.TryDequeue(out value)) await Task.Delay(1);
+            while (!InputQueue.TryDequeue(out value))
+            {
+                await _semaphoreSlim.WaitAsync();
+            }
             var inputPosition = workingSet[position + 1];
             workingSet[inputPosition] = value;
             return position + 2;
