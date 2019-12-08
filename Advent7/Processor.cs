@@ -82,8 +82,7 @@ namespace Advent7
         public void AddInput(int value)
         {
             InputQueue.Enqueue(value);
-            if (_semaphoreSlim.CurrentCount == 0)
-                _semaphoreSlim.Release();
+            TryReleaseSemaphore();
         }
 
         private int ExecuteGoto(int[] workingSet, int position, int input, bool compareTo)
@@ -110,11 +109,20 @@ namespace Advent7
             {
                 await _semaphoreSlim.WaitAsync(100).ConfigureAwait(false);
             }
-            if (_semaphoreSlim.CurrentCount == 0)
-                _semaphoreSlim.Release();
+            TryReleaseSemaphore();
             var inputPosition = workingSet[position + 1];
             workingSet[inputPosition] = value;
             return position + 2;
+        }
+
+        private void TryReleaseSemaphore()
+        {
+            try
+            {
+                if (_semaphoreSlim.CurrentCount == 0)
+                    _semaphoreSlim.Release();
+            }
+            catch { }
         }
 
         private int ExecuteOutput(int[] workingSet, int position, int input)
