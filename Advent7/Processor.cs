@@ -56,7 +56,7 @@ namespace Advent7
                         position = Execute2Params(workingSet, position, input, (x, y) => x * y);
                         break;
                     case Instruction.Input:
-                        position = await ExecuteInput(workingSet, position);
+                        position = await ExecuteInput(workingSet, position).ConfigureAwait(false);
                         break;
                     case Instruction.Output:
                         position = ExecuteOutput(workingSet, position, input);
@@ -82,7 +82,8 @@ namespace Advent7
         public void AddInput(int value)
         {
             InputQueue.Enqueue(value);
-            _semaphoreSlim.Release();
+            if (_semaphoreSlim.CurrentCount == 0)
+                _semaphoreSlim.Release();
         }
 
         private int ExecuteGoto(int[] workingSet, int position, int input, bool compareTo)
@@ -107,8 +108,10 @@ namespace Advent7
             int value;
             while (!InputQueue.TryDequeue(out value))
             {
-                await _semaphoreSlim.WaitAsync(50);
+                await _semaphoreSlim.WaitAsync(100).ConfigureAwait(false);
             }
+            if (_semaphoreSlim.CurrentCount == 0)
+                _semaphoreSlim.Release();
             var inputPosition = workingSet[position + 1];
             workingSet[inputPosition] = value;
             return position + 2;

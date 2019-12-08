@@ -12,14 +12,14 @@ namespace Advent7
         static async Task Main(string[] args)
         {
             // Correct for both 1st and 2nd star
-            var input = await GetInput();
+            var input = await GetInput().ConfigureAwait(false);
 
             /* For 1st star 
-            await For1stStar(input);
+            await For1stStar(input).ConfigureAwait(false);
             */
 
             // For 2nd star
-            await For2ndStar(input);
+            await For2ndStar(input).ConfigureAwait(false);
         }
 
         private static async Task For1stStar(int[] input)
@@ -30,7 +30,7 @@ namespace Advent7
             {
                 var processors = Initialize(input, settings.Length);
                 var result = new List<int>(combination);
-                result.Insert(0, (await RunSequence(processors, combination, 0))[0]);
+                result.Insert(0, (await RunSequence(processors, combination, 0).ConfigureAwait(false))[0]);
                 output.Add(result.ToArray());
             }
             var best = output.OrderByDescending(o => o[0]).First();
@@ -54,7 +54,7 @@ namespace Advent7
                 }
                 processors[0].InputQueue.Enqueue(0);
 
-                await Task.WhenAll(processors.Select(p => p.Process()));
+                await Task.WhenAll(processors.Select(p => p.Process())).ConfigureAwait(false);
 
                 var result = new List<int>(combination);
                 result.Insert(0, processors.Last().OutputQueue.Last());
@@ -75,7 +75,7 @@ namespace Advent7
                 processor.InputQueue.Enqueue(combination[i]);
                 parameters.ToList().ForEach(processor.InputQueue.Enqueue);
                 processor.OutputQueue.Clear();
-                await processor.Process();
+                await processor.Process().ConfigureAwait(false);
                 parameters = processor.OutputQueue.ToArray();
             }
             return parameters;
@@ -99,7 +99,7 @@ namespace Advent7
         {
             using (var reader = new StreamReader("./input.txt", true))
             {
-                var content = await reader.ReadToEndAsync();
+                var content = await reader.ReadToEndAsync().ConfigureAwait(false);
                 return content.Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => int.Parse(s, CultureInfo.InvariantCulture)).ToArray();
             }
