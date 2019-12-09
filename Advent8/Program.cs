@@ -9,76 +9,81 @@ namespace Advent8
     {
         private static int width = 25;
         private static int height = 6;
+        private static int size = width * height;
+        private static int layers;
 
         static async Task Main(string[] args)
         {
-            var input = await GetInput();
+            var input = GetInput();
+            layers = input.Length / size;
             var checksum = GetChecksum(input);
             Console.WriteLine($"Checksum: {checksum}");
 
             Render(input);
         }
 
-        private static int GetChecksum(int[][][] image)
+        private static int GetChecksum(byte[] image)
         {
-            var counts = image.Select(l => l.SelectMany(r => r)
-                        .GroupBy(p => p).OrderBy(g => g.Key)
-                        .Select(g => (g.Key, Count: g.Count()))
-                        .ToArray()).ToArray();
-            var leastZeros = counts.OrderBy(l => l.SingleOrDefault(g => g.Key == 0).Count).First();
-            var ones = leastZeros.SingleOrDefault(g => g.Key == 1).Count;
-            var twos = leastZeros.SingleOrDefault(g => g.Key == 2).Count;
+            var counts = new int[layers][];
+            for (int l = 0; l < layers; l++)
+            {
+                counts[l] = new int[3];
+                for (int p = l * size; p < (l + 1) * size; p++)
+                {
+                    counts[l][image[p]] += 1;
+                }
+            }
+            var leastZeros = counts.OrderBy(l => l[0]).First();
+            var ones = leastZeros[1];
+            var twos = leastZeros[2];
             return ones * twos;
         }
 
-        private static async Task<int[][][]> GetInput()
-        {
-            using (var reader = new StreamReader("input.txt", true))
-            {
-                var content = await reader.ReadToEndAsync();
-                var layers = content.Length / width / height;
-                var image = new int[layers][][];
-                for (int z = 0; z < layers; z++)
-                {
-                    var layer = new int[height][];
-                    for (int y = 0; y < height; y++)
-                    {
-                        var row = new int[width];
-                        for (int x = 0; x < width; x++)
-                        {
-                            row[x] = int.Parse(content.Substring((z * height + y) * width + x, 1));
-                        }
-                        layer[y] = row;
-                    }
-                    image[z] = layer;
-                }
-                return image;
-            }
-        }
-
-        private static void Render(int[][][] image)
+        private static void Render(byte[] image)
         {
             Console.WriteLine("Message:");
             for (int y = 0; y < height; y++)
             {
-                var line = new char[width];
+                var rendered = new string(' ', width).ToCharArray();
                 for (int x = 0; x < width; x++)
                 {
-                    for (int z = image.Length - 1; z >= 0; z--)
+                    var offset = y * width + x;
+                    for (int l = 0; l < layers; l++)
                     {
-                        switch (image[z][y][x])
+                        var value = image[offset];
+                        switch (value)
                         {
                             case 0:
-                                line[x] = ' ';
+                                rendered[x] = ' ';
                                 break;
                             case 1:
-                                line[x] = '\x2588';
+                                rendered[x] = '\x2588';
                                 break;
+                            case 2:
+                                offset += size;
+                                continue;
                         }
+                        break;
                     }
                 }
-                Console.WriteLine(line);
+                Console.WriteLine(rendered);
             }
+        }
+
+        private static byte[] GetInput()
+        {
+            var fileInfo = new FileInfo("input.txt");
+            byte[] buffer;
+            using (var reader = new BinaryReader(fileInfo.OpenRead()))
+            {
+                buffer = reader.ReadBytes((int)fileInfo.Length);
+            }
+            var offset = Convert.ToByte('0');
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] -= offset;
+            }
+            return buffer;
         }
 
     }
