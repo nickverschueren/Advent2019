@@ -34,22 +34,25 @@ namespace Advent10
         {
             var lines = GetSightLines(asteroids, asteroid);
             var i = 0;
-            while (i < 200)
+            var l = 0;
+            const int wanted = 200;
+            while (i < wanted)
             {
-                for (int l = 0; l < lines.Count; l++)
+                var line = lines[l];
+                var (x, y, _, _, _) = line[0];
+                line.RemoveAt(0);
+                i++;
+                if (i == wanted)
                 {
-                    if (lines.Count > 1)
-                    {
-                        var (x, y, _, _, _) = lines[l][0];
-                        lines[l].RemoveAt(0);
-                        i++;
-                        if (i == 200)
-                        {
-                            Console.WriteLine($"200th asteroid destroyed at {x},{y}");
-                            break;
-                        }
-                    }
+                    Console.WriteLine($"{wanted}th asteroid destroyed at {x},{y}");
+                    break;
                 }
+                if (line.Count == 0)
+                    lines.RemoveAt(l);
+                else
+                    l++;
+                if (lines.Count == 0) throw new ArgumentException("wanted > #asteroids");
+                l %= lines.Count;
             }
         }
 
